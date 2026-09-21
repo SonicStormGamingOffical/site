@@ -1,0 +1,17 @@
+# Installers are GitHub *release assets*, not repo files (GitHub's 100 MB
+# per-file repo limit). They are staged in download/ locally and uploaded to a
+# release; never commit them.
+download/*.exe
+download/*.deb
+download/*.dmg
+download/*.AppImage
+download/*.zip
+*.exe
+*.deb
+
+# Node service (Railway runs site/server.js)
+node_modules/
+.env
+
+# Local scratch / E2E test artifacts
+update-test.json

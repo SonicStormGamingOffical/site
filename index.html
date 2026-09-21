@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FusionHub Browser - Fast, lightweight Chromium browser</title>
+<meta name="description" content="FusionHub Browser uses only one live tab at a time, so it stays fast and light on memory, CPU and storage. Free download for Windows." />
+<link rel="icon" type="image/png" href="assets/icon.png" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><img src="assets/icon.png" alt="FusionHub logo" class="logo" />FusionHub</div>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#download">Download</a>
+  </nav>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>FusionHub <span>Browser</span></h1>
+      <p class="tagline">One live tab at a time. Built to be fast, quiet, and light on your PC.</p>
+      <a class="dl-btn" href="https://github.com/SonicStormGamingOffical/site/releases/download/v1.0.0/FusionHubBrowser-Setup-1.0.0.exe"
+         id="downloadBtn">Download for Windows</a>
+      <p class="dl-meta" id="dlMeta">Installer ~110 MB &middot; Windows 10/11 &middot; Free</p>
+      <div class="hero-notes">
+        <span>&#x1f9e0; Low memory</span>
+        <span>&#x2699;&#xfe0f; Low CPU</span>
+        <span>&#x1f4be; Small cache</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">&#x1f4bb;</div>
+        <h3>One live tab</h3>
+        <p>Only the tab you're using stays loaded. Everything else is suspended instantly,
+          so the browser barely touches your CPU and memory.</p>
+      </div>
+      <div class="card">
+        <div class="ico">&#x23f3;</div>
+        <h3>Instant switching</h3>
+        <p>Switch to a suspended tab and it reloads right away. Your session, history and
+          logged-in state are preserved per profile.</p>
+      </div>
+      <div class="card">
+        <div class="ico">&#x1f465;</div>
+        <h3>Profiles</h3>
+        <p>Create separate profiles for work, personal, school &mdash; each with its own
+          cookies, sessions and tabs. Add and delete them freely.</p>
+      </div>
+      <div class="card">
+        <div class="ico">&#x1f516;</div>
+        <h3>Storage saver</h3>
+        <p>A capped disk cache plus automatic cache sweeps keep the installation small.
+          Deep-clean removes all browsing data whenever you want.</p>
+      </div>
+      <div class="card">
+        <div class="ico">&#x1f4d6;</div>
+        <h3>Bookmarks</h3>
+        <p>A built-in bookmark bar. Save a page with one click and open it from the bar
+          anytime. Export or import your bookmarks as an HTML file.</p>
+      </div>
+      <div class="card">
+        <div class="ico">&#x1f9e0;</div>
+        <h3>Extensions + AdGuard</h3>
+        <p>The AdGuard ad blocker is included out of the box, and you can load more
+          extensions (.crx or unpacked folders) from Settings.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section id="how">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><b>Open a tab.</b> That tab is the only one fully loaded.</li>
+      <li><b>Switch away.</b> The old tab is suspended and its page is unloaded, freeing
+        the renderer's CPU and memory.</li>
+      <li><b>Come back.</b> The tab reloads exactly where you left it.</li>
+    </ol>
+    <p class="privacy">No analytics, no ad trackers built in. Your browsing stays
+      on your machine.</p>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download">
+    <h2>Get FusionHub</h2>
+    <p class="dl-sub">Free. Pick your platform below.</p>
+
+    <div class="platforms">
+      <!-- Installers are GitHub release assets (also mirrored by server.js at
+           /download/windows and /download/linux). -->
+      <a class="dl-btn big" id="dlWin" data-platform="windows"
+         href="https://github.com/SonicStormGamingOffical/site/releases/download/v1.0.0/FusionHubBrowser-Setup-1.0.0.exe">
+        <span class="p-ico">&#x1f5a5;&#xfe0f;</span>
+        <span class="p-name">Windows</span>
+        <span class="p-sub">Installer &middot; Windows 10/11 (64-bit)</span>
+      </a>
+      <a class="dl-btn big" id="dlLinux" data-platform="linux"
+         href="https://github.com/SonicStormGamingOffical/site/releases/download/v1.0.0/FusionHub-Browser-1.0.0-linux.deb">
+        <span class="p-ico">&#x1f427;</span>
+        <span class="p-name">Linux</span>
+        <span class="p-sub">.deb package &middot; Debian / Ubuntu / Mint (64-bit)</span>
+      </a>
+      <div class="dl-btn big off">
+        <span class="p-ico">&#x1f34e;</span>
+        <span class="p-name">macOS</span>
+        <span class="p-sub">.dmg coming soon (built on a Mac)</span>
+      </div>
+      <div class="dl-btn big off">
+        <span class="p-ico">&#x1f4f1;</span>
+        <span class="p-name">Android</span>
+        <span class="p-sub">Not available &mdash; FusionHub is a desktop browser</span>
+      </div>
+    </div>
+
+    <ul class="req">
+      <li>Windows 10 or 11 (64-bit), or a Debian-based Linux (64-bit)</li>
+      <li>~300 MB free disk space</li>
+      <li>2 GB RAM recommended</li>
+      <li>Windows: run the .exe and follow the installer steps; Linux: <code>sudo apt install ./FusionHub-Browser-1.0.0-linux.deb</code></li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <span>&copy; 2026 FusionHub. Built to run light.</span>
+  <span id="siteVersion">Version 1.0.0</span>
+</footer>
+
+<!-- Keep the download buttons + version in sync with the latest GitHub release,
+     served by server.js at /api/latest. Falls back to the static links above. -->
+<script>
+(function () {
+  if (!window.fetch) return;
+  fetch('api/latest', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (v) {
+      if (!v) return;
+      var dl = v.downloads || {};
+      var map = { downloadBtn: dl.windows, dlWin: dl.windows, dlLinux: dl.linux };
+      Object.keys(map).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && map[id] && map[id].url) el.href = map[id].url;
+      });
+      if (v.version) {
+        var ver = document.getElementById('siteVersion');
+        if (ver) ver.textContent = 'Version ' + v.version;
+      }
+    })
+    .catch(function () { /* static links already work */ });
+})();
+</script>
+
+</body>
+</html>
