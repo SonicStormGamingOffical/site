@@ -35,11 +35,7 @@ and gives apps a single URL to talk to. Railway runs it via
 | `GET /store.html`    | extension store: browse + publish extensions             |
 | `GET /api/extensions` | extension catalogue (JSON; used by the in-app store)    |
 | `GET /api/extensions/<id>/download` | the `.crx` / `.zip` extension package      |
-| `POST /api/extensions` | publish an extension (raw body; metadata in query)     |
-| `POST /api/telemetry` | store/replace one computer's telemetry (auth)            |
-| `GET /api/telemetry` | list every computer the server has seen (auth)           |
-| `POST /api/forget`   | forget a single computer (auth)                          |
-| `GET /health`        | liveness probe                                           |
+| `POST /api/extensions` | publish an extension (raw body; metadata in query)     |W
 
 It also **watches the GitHub releases** of the repo and refreshes the version it
 reports (falling back to the checked-in `version.json` when GitHub is
@@ -64,22 +60,6 @@ anyone publish. Set `STORE_MAX_MB` to change the size cap (default 25 MB).
 
 ### Telemetry (the owner's Admin Panel)
 
-Every installed build of FusionHub Browser carries a hidden `build/telemetry.json`
-(`src/lib/telemetry.js` reads it) with this server's URL and a shared token. Each
-copy silently posts a snapshot of its tabs/stats to `POST /api/telemetry` every
-15 s, so the owner's **Admin Panel** can show computers that are **not** on the
-same Wi-Fi.
-
-Only the **SHA-256** of the default token is compiled into this (public) repo;
-the raw token ships inside the app. The Admin Panel shows `public` when the
-server answers and `local only` when it does not. Machines are kept in
-`data/machines.json` (git-ignored) and capped at 500; `POST /api/forget` removes
-one. Set `FH_TELEMETRY_TOKEN` to rotate to a plaintext secret (must match
-`build/telemetry.json`).
-
-> Telemetry is deliberately silent (no UI toggle), and the token is extractable
-> from any distributed build. Do not post anything you would not treat as public.
-
 ## Environment (`.env`)
 
 Copy `.env.example` to `.env` for local runs:
@@ -101,9 +81,6 @@ service's **Variables** tab:
 | `SITE_REFRESH_MS` | `600000`                                         | release re-check interval (min 60000)     |
 | `GH_TOKEN`        | *(empty)*                                        | GitHub token; only needed if the repo is private or for publish-release.js |
 | `STORE_MAX_MB`    | `25`                                             | max uploaded extension size (MB)          |
-| `STORE_UPLOAD_TOKEN` | *(empty = open publishing)*                   | shared secret required to publish         |
-| `FH_TELEMETRY_TOKEN` | *(empty; uses the compiled-in hash)*          | override the telemetry shared secret      |
-| `FH_TELEMETRY_TOKEN_SHA256` | *(default compiled in)*                | accept a different token hash             |
 
 `.env` is git-ignored; `.env.example` is committed.
 
