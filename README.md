@@ -12,8 +12,8 @@ The Windows installer (~117 MB) and the Linux `.deb` (~142 MB) are too big for
 GitHub's 100 MB per-file repo limit, so they are published as **GitHub Release
 assets** and linked directly:
 
-- Windows: `.../releases/download/v1.0.0/FusionHubBrowser-Setup-1.0.0.exe`
-- Linux: `.../releases/download/v1.0.0/FusionHub-Browser-1.0.0-linux.deb`
+- Windows: `.../releases/download/v1.0.1/FusionHubBrowser-Setup-1.0.1.exe`
+- Linux: `.../releases/download/v1.0.1/FusionHub-Browser-1.0.1-linux.deb`
 
 Copies staged in `download/` are git-ignored (`.exe` / `.deb`) and must never be
 committed.
@@ -36,8 +36,30 @@ and gives apps a single URL to talk to. Railway runs it via
 
 It also **watches the GitHub releases** of the repo and refreshes the version it
 reports (falling back to the checked-in `version.json` when GitHub is
-unreachable). Environment variables: `PORT` (Railway sets it), `SITE_URL`
-(defaults to the canonical URL above), `SITE_REPO`, `SITE_REFRESH_MS`.
+unreachable).
+
+## Environment (`.env`)
+
+Copy `.env.example` to `.env` for local runs:
+
+```bash
+cd site
+cp .env.example .env
+```
+
+`server.js` loads `.env` automatically (dependency-free), but **real process
+environment variables always win**, so on Railway set the same keys under the
+service's **Variables** tab:
+
+| Key               | Default                                          | Purpose                                   |
+| ----------------- | ------------------------------------------------ | ----------------------------------------- |
+| `PORT`            | `8899` (Railway injects its own)                 | HTTP port                                 |
+| `SITE_URL`        | `https://site-production-e64f.up.railway.app`    | canonical URL used in `/api/latest`       |
+| `SITE_REPO`       | `SonicStormGamingOffical/site`                   | repo whose releases are watched           |
+| `SITE_REFRESH_MS` | `600000`                                         | release re-check interval (min 60000)     |
+| `GH_TOKEN`        | *(empty)*                                        | only needed if the repo is private        |
+
+`.env` is git-ignored; `.env.example` is committed.
 
 Run locally:
 
@@ -48,20 +70,31 @@ node server.js        # http://localhost:8899
 
 ## Publishing a new build
 
-From the project root (where the browser's `package.json` lives):
+1. Bump `version` in the root `package.json` (e.g. `1.0.1`). That drives the
+   installer names, the GitHub tag (`v1.0.1`) and the in-app updater.
+2. Build both platforms from the project root:
 
-```bash
-npm run build                    # produces dist\FusionHub Browser Setup 1.0.0.exe
-```
+   ```bash
+   npm run build          # Windows  -> dist\FusionHub Browser Setup 1.0.1.exe
+   npm run build:linux    # Linux    -> dist\FusionHub-Browser-1.0.1-linux.deb
+   ```
 
-Then:
+3. Stage the installers under the exact asset names `publish-release.js`
+   expects, then upload:
 
-1. Create a GitHub release (e.g. tag `v1.0.0`) on the `site` repo and upload
-   `FusionHubBrowser-Setup-1.0.0.exe` and `FusionHub-Browser-1.0.0-linux.deb`
-   as release assets. (`scripts/publish-release.js` automates this.)
-2. Update `site/version.json` (version + download URLs/sizes) and the download
-   links in `site/index.html`.
-3. Commit + push so Railway redeploys.
+   ```bash
+   copy "dist\FusionHub Browser Setup 1.0.1.exe" site\download\FusionHubBrowser-Setup-1.0.1.exe
+   copy "dist\FusionHub-Browser-1.0.1-linux.deb" site\download\FusionHub-Browser-1.0.1-linux.deb
+   node scripts\publish-release.js
+   ```
+
+   `scripts/publish-release.js` creates/replaces the `v1.0.1` release, uploads
+   both assets, and rewrites `site/version.json` with `/releases/latest/download/`
+   URLs plus sha256 hashes. It reads the token from `GH_TOKEN` or `git credential fill`.
+
+4. Commit + push `site/` so Railway redeploys and the site/version endpoint
+   report the new release. Installed apps on the older version will then show
+   the update arrow.
 
 ## What's inside
 
@@ -72,7 +105,11 @@ site/
   server.js       static server + /api/latest version endpoint (Railway)
   package.json    `npm start` -> node server.js
   version.json    latest version + download URLs/sizes
+  railway.json    Railway start command + /health healthcheck
+  Procfile        web: node server.js
+  .env.example    documented environment variables (copy to .env)
   README.md       this file
   assets/icon.png logo / favicon
   download/       (git-ignored) staged installers before uploading to a release
 ```
+

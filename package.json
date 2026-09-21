@@ -1,6 +1,6 @@
 {
   "name": "fusionhub-site",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "FusionHub Browser landing page + version endpoint (Railway).",
   "main": "server.js",

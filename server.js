@@ -15,16 +15,35 @@
  * it reports, falling back to the checked-in version.json when GitHub is
  * unreachable. No dependencies.
  *
- * Environment:
+ * Environment (also read from a local `.env` file when present):
  *   PORT        port to listen on (Railway sets this automatically)
  *   SITE_URL    canonical site URL (defaults to the Railway deployment)
  *   SITE_REPO   owner/repo to watch (defaults to SonicStormGamingOffical/site)
+ *   GH_TOKEN    optional; only needed when SITE_REPO is private
  */
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+
+// Tiny dependency-free .env loader. Real process env vars always win, so
+// Railway's dashboard variables override anything in the file.
+(function loadDotEnv() {
+  try {
+    const file = path.join(__dirname, '.env');
+    if (!fs.existsSync(file)) return;
+    for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+      const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+      if (!m) continue;
+      let val = m[2];
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[m[1]] === undefined) process.env[m[1]] = val;
+    }
+  } catch (err) { /* a broken .env must never stop the server */ }
+})();
 
 const PORT = Number(process.env.PORT || 8899);
 const HOST = process.env.HOST || '0.0.0.0';
