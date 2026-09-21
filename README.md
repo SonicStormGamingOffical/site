@@ -58,8 +58,6 @@ anyone publish. Set `STORE_MAX_MB` to change the size cap (default 25 MB).
 > The store does not review or sandbox uploads, so only run it on a host you
 > trust, and treat the upload endpoint as a public write surface.
 
-### Telemetry (the owner's Admin Panel)
-
 ## Environment (`.env`)
 
 Copy `.env.example` to `.env` for local runs:
