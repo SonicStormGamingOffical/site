@@ -4,7 +4,7 @@ This folder is the static website **and** the small Node service that powers it.
 It is hosted on **Railway**, which pulls this repo from GitHub
 (`github.com/SonicStormGamingOffical/site`): every push to `main` redeploys.
 
-Canonical URL: **https://site-production-ce8b.up.railway.app/**
+Canonical URL: **https://site-production-e64f.up.railway.app/**
 
 ## Downloads come from GitHub Releases
 
@@ -38,17 +38,26 @@ and gives apps a single URL to talk to. Railway runs it via
 | `POST /api/extensions` | publish an extension (raw body; metadata in query)     |
 | `GET /health`        | liveness probe                                           |
 
+It also **watches the GitHub releases** of the repo and refreshes the version it
+reports (falling back to the checked-in `version.json` when GitHub is
+unreachable).
+
 ### Extension store
 
 The store is user-driven: anyone can publish a `.crx` file or a `.zip` of an
 unpacked extension (it must contain `manifest.json` at its root). Packages are
-written to `data/extensions/` (git-ignored) with a `index.json` catalogue.
-Inside the browser, **Extensions → Extension store** lists the catalogue and
-installs a package with one click.
+written to `data/extensions/` (git-ignored) with an `index.json` catalogue, and
+they are served back at `/api/extensions/<id>/download`. Inside the browser,
+**Extensions → Extension store** lists the catalogue and installs a package with
+one click.
 
-It also **watches the GitHub releases** of the repo and refreshes the version it
-reports (falling back to the checked-in `version.json` when GitHub is
-unreachable).
+Set `STORE_UPLOAD_TOKEN` to require a shared secret before publishing (send it as
+an `x-upload-token` header or a `?token=` query parameter); leave it empty to let
+anyone publish. Set `STORE_MAX_MB` to change the size cap (default 25 MB).
+
+> Publishing an extension means other users can run that code in their browser.
+> The store does not review or sandbox uploads, so only run it on a host you
+> trust, and treat the upload endpoint as a public write surface.
 
 ## Environment (`.env`)
 
