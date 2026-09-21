@@ -4,7 +4,7 @@ This folder is the static website **and** the small Node service that powers it.
 It is hosted on **Railway**, which pulls this repo from GitHub
 (`github.com/SonicStormGamingOffical/site`): every push to `main` redeploys.
 
-Canonical URL: **https://site-production-e64f.up.railway.app/**
+Canonical URL: **https://site-production-ce8b.up.railway.app/**
 
 ## Downloads come from GitHub Releases
 
@@ -12,8 +12,8 @@ The Windows installer (~117 MB) and the Linux `.deb` (~142 MB) are too big for
 GitHub's 100 MB per-file repo limit, so they are published as **GitHub Release
 assets** and linked directly:
 
-- Windows: `.../releases/download/v1.0.1/FusionHubBrowser-Setup-1.0.1.exe`
-- Linux: `.../releases/download/v1.0.1/FusionHub-Browser-1.0.1-linux.deb`
+- Windows: `.../releases/download/v1.0.2/FusionHubBrowser-Setup-1.0.2.exe`
+- Linux: `.../releases/download/v1.0.2/FusionHub-Browser-1.0.2-linux.deb`
 
 Copies staged in `download/` are git-ignored (`.exe` / `.deb`) and must never be
 committed.
@@ -54,47 +54,12 @@ service's **Variables** tab:
 | Key               | Default                                          | Purpose                                   |
 | ----------------- | ------------------------------------------------ | ----------------------------------------- |
 | `PORT`            | `8899` (Railway injects its own)                 | HTTP port                                 |
-| `SITE_URL`        | `https://site-production-e64f.up.railway.app`    | canonical URL used in `/api/latest`       |
-| `SITE_REPO`       | `SonicStormGamingOffical/site`                   | repo whose releases are watched           |
+| `SITE_URL`        | `https://replaceme-with-your-site-url.com`    | canonical URL used in `/api/latest`       |
+| `SITE_REPO`       | `replaceme-with-your-github-username/replaceme-with-your-github-repo`                   | repo whose releases are watched           |
 | `SITE_REFRESH_MS` | `600000`                                         | release re-check interval (min 60000)     |
-| `GH_TOKEN`        | *(empty)*                                        | only needed if the repo is private        |
+| `GH_TOKEN`        | *Optional. GitHub personal access token with `repo` scope. Only required when SITE_REPO is private (so the server can read the release) or for `node scripts/publish-release.js` uploads. Leave empty when the repo is public.*                                        | only needed if the repo is private        |
 
 `.env` is git-ignored; `.env.example` is committed.
-
-Run locally:
-
-```bash
-cd site
-node server.js        # http://localhost:8899
-```
-
-## Publishing a new build
-
-1. Bump `version` in the root `package.json` (e.g. `1.0.1`). That drives the
-   installer names, the GitHub tag (`v1.0.1`) and the in-app updater.
-2. Build both platforms from the project root:
-
-   ```bash
-   npm run build          # Windows  -> dist\FusionHub Browser Setup 1.0.1.exe
-   npm run build:linux    # Linux    -> dist\FusionHub-Browser-1.0.1-linux.deb
-   ```
-
-3. Stage the installers under the exact asset names `publish-release.js`
-   expects, then upload:
-
-   ```bash
-   copy "dist\FusionHub Browser Setup 1.0.1.exe" site\download\FusionHubBrowser-Setup-1.0.1.exe
-   copy "dist\FusionHub-Browser-1.0.1-linux.deb" site\download\FusionHub-Browser-1.0.1-linux.deb
-   node scripts\publish-release.js
-   ```
-
-   `scripts/publish-release.js` creates/replaces the `v1.0.1` release, uploads
-   both assets, and rewrites `site/version.json` with `/releases/latest/download/`
-   URLs plus sha256 hashes. It reads the token from `GH_TOKEN` or `git credential fill`.
-
-4. Commit + push `site/` so Railway redeploys and the site/version endpoint
-   report the new release. Installed apps on the older version will then show
-   the update arrow.
 
 ## What's inside
 
