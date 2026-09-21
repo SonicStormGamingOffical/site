@@ -12,8 +12,8 @@ The Windows installer (~117 MB) and the Linux `.deb` (~142 MB) are too big for
 GitHub's 100 MB per-file repo limit, so they are published as **GitHub Release
 assets** and linked directly:
 
-- Windows: `.../releases/download/v1.0.2/FusionHubBrowser-Setup-1.0.2.exe`
-- Linux: `.../releases/download/v1.0.2/FusionHub-Browser-1.0.2-linux.deb`
+- Windows: `.../releases/download/v1.0.3/FusionHubBrowser-Setup-1.0.3.exe`
+- Linux: `.../releases/download/v1.0.3/FusionHub-Browser-1.0.3-linux.deb`
 
 Copies staged in `download/` are git-ignored (`.exe` / `.deb`) and must never be
 committed.
@@ -32,7 +32,19 @@ and gives apps a single URL to talk to. Railway runs it via
 | `GET /download/windows` | 302 redirect to the Windows `.exe` release asset      |
 | `GET /download/linux`   | 302 redirect to the Linux `.deb` release asset        |
 | `GET /releases`      | 302 redirect to the GitHub releases page                 |
+| `GET /store.html`    | extension store: browse + publish extensions             |
+| `GET /api/extensions` | extension catalogue (JSON; used by the in-app store)    |
+| `GET /api/extensions/<id>/download` | the `.crx` / `.zip` extension package      |
+| `POST /api/extensions` | publish an extension (raw body; metadata in query)     |
 | `GET /health`        | liveness probe                                           |
+
+### Extension store
+
+The store is user-driven: anyone can publish a `.crx` file or a `.zip` of an
+unpacked extension (it must contain `manifest.json` at its root). Packages are
+written to `data/extensions/` (git-ignored) with a `index.json` catalogue.
+Inside the browser, **Extensions → Extension store** lists the catalogue and
+installs a package with one click.
 
 It also **watches the GitHub releases** of the repo and refreshes the version it
 reports (falling back to the checked-in `version.json` when GitHub is
@@ -57,7 +69,9 @@ service's **Variables** tab:
 | `SITE_URL`        | `https://replaceme-with-your-site-url.com`    | canonical URL used in `/api/latest`       |
 | `SITE_REPO`       | `replaceme-with-your-github-username/replaceme-with-your-github-repo`                   | repo whose releases are watched           |
 | `SITE_REFRESH_MS` | `600000`                                         | release re-check interval (min 60000)     |
-| `GH_TOKEN`        | *Optional. GitHub personal access token with `repo` scope. Only required when SITE_REPO is private (so the server can read the release) or for `node scripts/publish-release.js` uploads. Leave empty when the repo is public.*                                        | only needed if the repo is private        |
+| `GH_TOKEN`        | *(empty)*                                        | GitHub token; only needed if the repo is private or for publish-release.js |
+| `STORE_MAX_MB`    | `25`                                             | max uploaded extension size (MB)          |
+| `STORE_UPLOAD_TOKEN` | *(empty = open publishing)*                   | shared secret required to publish         |
 
 `.env` is git-ignored; `.env.example` is committed.
 
@@ -66,8 +80,10 @@ service's **Variables** tab:
 ```
 site/
   index.html      landing page with download buttons (GitHub release links)
+  store.html      extension store (browse + publish)
   style.css       styling
-  server.js       static server + /api/latest version endpoint (Railway)
+  server.js       static server + /api/latest + extension-store endpoints (Railway)
+  data/           (git-ignored) published extension packages + catalogue
   package.json    `npm start` -> node server.js
   version.json    latest version + download URLs/sizes
   railway.json    Railway start command + /health healthcheck

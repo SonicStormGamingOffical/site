@@ -147,6 +147,130 @@ function refreshQuietly() {
 }
 
 // ---------------------------------------------------------------------------
+// Extension store
+//
+//   GET  /api/extensions                      catalogue (JSON)
+//   GET  /api/extensions/<id>/download        the .crx / .zip package
+//   POST /api/extensions?name=&version=&...   publish a package (raw body)
+//
+// Packages live in data/extensions/ (git-ignored). Anyone can publish so the
+// store grows by itself; set STORE_UPLOAD_TOKEN to require a shared secret, and
+// STORE_MAX_MB to change the size cap.
+// ---------------------------------------------------------------------------
+const STORE_DIR = path.join(ROOT, 'data', 'extensions');
+const STORE_INDEX = path.join(STORE_DIR, 'index.json');
+const STORE_MAX_BYTES = Math.max(1024 * 1024, (Number(process.env.STORE_MAX_MB) || 25) * 1024 * 1024);
+const STORE_UPLOAD_TOKEN = process.env.STORE_UPLOAD_TOKEN || '';
+
+function storeLoad() {
+  try {
+    const arr = JSON.parse(fs.readFileSync(STORE_INDEX, 'utf8'));
+    return Array.isArray(arr) ? arr : [];
+  } catch (err) { return []; }
+}
+
+function storeSave(list) {
+  try {
+    fs.mkdirSync(STORE_DIR, { recursive: true });
+    fs.writeFileSync(STORE_INDEX, JSON.stringify(list, null, 2));
+  } catch (err) {
+    console.error('[store] save failed:', err && err.message || err);
+  }
+}
+
+function storePublicUrl(id) {
+  return SITE_URL + '/api/extensions/' + encodeURIComponent(id) + '/download';
+}
+
+function storeListPublic() {
+  return storeLoad().map((e) => ({
+    id: e.id,
+    name: e.name,
+    version: e.version,
+    author: e.author || '',
+    description: e.description || '',
+    size: e.size || 0,
+    publishedAt: e.publishedAt || null,
+    downloads: e.downloads || 0,
+    url: storePublicUrl(e.id)
+  }));
+}
+
+function storeSlug(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'extension';
+}
+
+function readBody(req, limit) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) {
+        reject(new Error('Upload too large (limit ' + Math.round(limit / 1048576) + ' MB).'));
+        try { req.destroy(); } catch (e) { /* ignore */ }
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+async function handleStoreUpload(req, res) {
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    if (STORE_UPLOAD_TOKEN) {
+      const token = req.headers['x-upload-token'] || url.searchParams.get('token') || '';
+      if (token !== STORE_UPLOAD_TOKEN) return sendJson(res, 401, { ok: false, error: 'upload token required' });
+    }
+    const name = String(url.searchParams.get('name') || '').trim().slice(0, 80);
+    const version = String(url.searchParams.get('version') || '').trim().slice(0, 24);
+    const author = String(url.searchParams.get('author') || '').trim().slice(0, 80);
+    const description = String(url.searchParams.get('description') || '').trim().slice(0, 600);
+    if (!name) return sendJson(res, 400, { ok: false, error: 'A name is required.' });
+    if (!/^[0-9A-Za-z][0-9A-Za-z.+-]{0,23}$/.test(version)) {
+      return sendJson(res, 400, { ok: false, error: 'A version like 1.0.0 is required.' });
+    }
+    const body = await readBody(req, STORE_MAX_BYTES);
+    if (!body.length) return sendJson(res, 400, { ok: false, error: 'The upload was empty.' });
+    const isZip = body[0] === 0x50 && body[1] === 0x4b;
+    const isCrx = body.toString('ascii', 0, 4) === 'Cr24';
+    if (!isZip && !isCrx) {
+      return sendJson(res, 400, { ok: false, error: 'The upload must be a .crx or .zip extension package.' });
+    }
+
+    const id = storeSlug(name) + '-' + Date.now().toString(36);
+    const fileName = id + (isCrx ? '.crx' : '.zip');
+    fs.mkdirSync(STORE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(STORE_DIR, fileName), body);
+
+    const list = storeLoad();
+    const entry = {
+      id, file: fileName, name, version, author, description,
+      size: body.length, publishedAt: new Date().toISOString(), downloads: 0
+    };
+    const dup = list.findIndex((e) => e.name === name && e.version === version);
+    if (dup >= 0) {
+      const old = list[dup];
+      if (old.file && old.file !== fileName) {
+        try { fs.rmSync(path.join(STORE_DIR, old.file), { force: true }); } catch (e) { /* ignore */ }
+      }
+      entry.downloads = old.downloads || 0;
+      list[dup] = entry;
+    } else {
+      list.unshift(entry);
+    }
+    storeSave(list);
+    console.log('[store] published ' + name + ' ' + version + ' (' + body.length + ' bytes) as ' + id);
+    return sendJson(res, 201, { ok: true, id, url: storePublicUrl(id) });
+  } catch (err) {
+    return sendJson(res, 400, { ok: false, error: (err && err.message) || String(err) });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
 function sendJson(res, status, obj) {
@@ -177,6 +301,12 @@ function redirect(res, url) {
 function serveStatic(req, res, pathname) {
   let rel = decodeURIComponent(pathname);
   if (rel === '/') rel = '/index.html';
+  // Never expose internals: the store database, dotfiles or dependencies.
+  if (/^\/(?:data|node_modules)\//i.test(rel) || /^\/\./.test(rel)) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Not found');
+    return;
+  }
   // Block path traversal.
   const file = path.normalize(path.join(ROOT, rel));
   if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
@@ -212,6 +342,30 @@ function route(req, res) {
     const deb = latest.downloads && latest.downloads.linux;
     if (!deb || !deb.url) return sendJson(res, 404, { ok: false, error: 'linux download not configured' });
     return redirect(res, deb.url);
+  }
+  if (pathname === '/api/extensions') {
+    if (req.method === 'POST') return handleStoreUpload(req, res);
+    return sendJson(res, 200, { ok: true, extensions: storeListPublic() });
+  }
+  const extDl = /^\/api\/extensions\/([^/]+)\/download$/.exec(pathname);
+  if (extDl && req.method === 'GET') {
+    const id = decodeURIComponent(extDl[1]);
+    const list = storeLoad();
+    const entry = list.find((e) => e.id === id);
+    if (!entry || !entry.file) return sendJson(res, 404, { ok: false, error: 'not found' });
+    const file = path.normalize(path.join(STORE_DIR, entry.file));
+    if (!file.startsWith(STORE_DIR) || !fs.existsSync(file)) return sendJson(res, 404, { ok: false, error: 'file missing' });
+    entry.downloads = (entry.downloads || 0) + 1;
+    storeSave(list);
+    const st = fs.statSync(file);
+    res.writeHead(200, {
+      'content-type': 'application/octet-stream',
+      'content-length': st.size,
+      'content-disposition': 'attachment; filename="' + entry.file + '"',
+      'cache-control': 'no-store',
+      'access-control-allow-origin': '*'
+    });
+    return fs.createReadStream(file).pipe(res);
   }
   if (pathname === '/releases') {
     return redirect(res, 'https://github.com/' + SITE_REPO + '/releases');

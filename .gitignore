@@ -13,5 +13,8 @@ download/*.zip
 node_modules/
 .env
 
+# Extension store: uploaded packages + catalogue index (kept on the server)
+data/
+
 # Local scratch / E2E test artifacts
 update-test.json
