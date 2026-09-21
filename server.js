@@ -25,6 +25,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { URL } = require('url');
 
 // Tiny dependency-free .env loader. Real process env vars always win, so
@@ -271,6 +272,140 @@ async function handleStoreUpload(req, res) {
 }
 
 // ---------------------------------------------------------------------------
+// Telemetry collection (the owner's Admin Panel)
+//
+//   POST /api/telemetry   store/replace one machine's telemetry   (auth)
+//   GET  /api/telemetry   list every machine the server has seen   (auth)
+//   POST /api/forget      forget a single machine                  (auth)
+//
+// Every install of FusionHub Browser silently reports here: the server URL and
+// the shared token are baked into the app at build time (build/telemetry.json
+// -> src/lib/telemetry.js) and never shown in the user-facing UI. Only the
+// SHA-256 of the default token lives in this public repo; the raw token ships
+// inside the app. Set FH_TELEMETRY_TOKEN to override it with a plaintext secret,
+// or FH_TELEMETRY_TOKEN_SHA256 to swap the hash. Data lives in
+// data/machines.json (git-ignored).
+// ---------------------------------------------------------------------------
+const TELEMETRY_DIR = path.join(ROOT, 'data');
+const TELEMETRY_FILE = path.join(TELEMETRY_DIR, 'machines.json');
+const TELEMETRY_TOKEN = String(process.env.FH_TELEMETRY_TOKEN || '');
+const TELEMETRY_TOKEN_SHA256 = String(process.env.FH_TELEMETRY_TOKEN_SHA256 ||
+  '8271acd0902d5460d43ce164394e8fc3ff52c78b08f59af6182adffe5cc40000');
+const TELEMETRY_MAX_BODY = 2 * 1024 * 1024; // 2 MB per machine payload
+const TELEMETRY_KEEP = 500;
+
+let machines = {};
+try {
+  const parsed = JSON.parse(fs.readFileSync(TELEMETRY_FILE, 'utf8'));
+  if (parsed && typeof parsed.machines === 'object') machines = parsed.machines;
+} catch (err) { /* first run - nothing stored yet */ }
+
+let telemetrySaveTimer = null;
+function telemetrySave() {
+  if (telemetrySaveTimer) return;
+  telemetrySaveTimer = setTimeout(() => {
+    telemetrySaveTimer = null;
+    try {
+      fs.mkdirSync(TELEMETRY_DIR, { recursive: true });
+      const tmp = TELEMETRY_FILE + '.tmp';
+      fs.writeFileSync(tmp, JSON.stringify({ savedAt: new Date().toISOString(), machines }, null, 2));
+      fs.renameSync(tmp, TELEMETRY_FILE);
+    } catch (err) { console.error('[telemetry] save failed:', (err && err.message) || err); }
+  }, 400);
+}
+
+function telemetryTrim() {
+  const ids = Object.keys(machines);
+  if (ids.length <= TELEMETRY_KEEP) return;
+  ids
+    .sort((a, b) => new Date(machines[b].receivedAt || 0) - new Date(machines[a].receivedAt || 0))
+    .slice(TELEMETRY_KEEP)
+    .forEach((id) => { delete machines[id]; });
+}
+
+function safeEqual(a, b) {
+  const ba = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  if (ba.length !== bb.length) return false;
+  try { return crypto.timingSafeEqual(ba, bb); } catch (err) { return false; }
+}
+
+function telemetryAuthorized(req) {
+  const token = String(req.headers['x-fh-token'] || '');
+  if (!token) return false;
+  if (TELEMETRY_TOKEN) return safeEqual(token, TELEMETRY_TOKEN);
+  if (!TELEMETRY_TOKEN_SHA256) return false;
+  return safeEqual(crypto.createHash('sha256').update(token).digest('hex'), TELEMETRY_TOKEN_SHA256);
+}
+
+function telemetryPublic(rec) {
+  return {
+    machineId: rec.machineId,
+    machineName: rec.machineName || 'Computer',
+    platform: rec.platform || '',
+    version: rec.version || '',
+    sentAt: rec.sentAt || '',
+    firstSeenAt: rec.firstSeenAt || '',
+    telemetry: rec.telemetry || {}
+  };
+}
+
+async function handleTelemetry(req, res, pathname) {
+  if (!TELEMETRY_TOKEN && !TELEMETRY_TOKEN_SHA256) {
+    return sendJson(res, 503, { ok: false, error: 'telemetry not configured' });
+  }
+  if (!telemetryAuthorized(req)) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
+
+  if (pathname === '/api/telemetry' && req.method === 'GET') {
+    return sendJson(res, 200, {
+      ok: true,
+      machines: Object.keys(machines).map((id) => telemetryPublic(machines[id]))
+    });
+  }
+
+  if (pathname === '/api/telemetry' && req.method === 'POST') {
+    let body;
+    try {
+      const raw = await readBody(req, TELEMETRY_MAX_BODY);
+      body = raw && raw.length ? JSON.parse(raw.toString('utf8')) : null;
+    } catch (err) { return sendJson(res, 400, { ok: false, error: 'invalid JSON' }); }
+    if (!body || !body.machineId) return sendJson(res, 400, { ok: false, error: 'machineId required' });
+
+    const id = String(body.machineId).slice(0, 80);
+    const prev = machines[id] || {};
+    const now = new Date().toISOString();
+    machines[id] = {
+      machineId: id,
+      machineName: String(body.machineName || prev.machineName || 'Computer').slice(0, 120),
+      platform: String(body.platform || '').slice(0, 40),
+      version: String(body.version || '').slice(0, 40),
+      sentAt: String(body.sentAt || now).slice(0, 40),
+      firstSeenAt: prev.firstSeenAt || now,
+      receivedAt: now,
+      telemetry: body.telemetry || {}
+    };
+    telemetryTrim();
+    telemetrySave();
+    return sendJson(res, 200, { ok: true, machineId: id });
+  }
+
+  if (pathname === '/api/forget' && req.method === 'POST') {
+    let body;
+    try {
+      const raw = await readBody(req, TELEMETRY_MAX_BODY);
+      body = raw && raw.length ? JSON.parse(raw.toString('utf8')) : null;
+    } catch (err) { return sendJson(res, 400, { ok: false, error: 'invalid JSON' }); }
+    const id = body && body.machineId ? String(body.machineId) : '';
+    if (!id || !machines[id]) return sendJson(res, 404, { ok: false, error: 'unknown machine' });
+    delete machines[id];
+    telemetrySave();
+    return sendJson(res, 200, { ok: true });
+  }
+
+  return sendJson(res, 404, { ok: false, error: 'not found' });
+}
+
+// ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
 function sendJson(res, status, obj) {
@@ -328,7 +463,13 @@ function route(req, res) {
   const pathname = new URL(req.url, 'http://localhost').pathname;
 
   if (pathname === '/health') {
-    return sendJson(res, 200, { ok: true, service: 'fusionhub-site', version: latest.version, site: SITE_URL });
+    return sendJson(res, 200, {
+      ok: true,
+      service: 'fusionhub-site',
+      version: latest.version,
+      site: SITE_URL,
+      machines: Object.keys(machines).length
+    });
   }
   if (pathname === '/api/latest' || pathname === '/api/version' || pathname === '/version') {
     return sendJson(res, 200, latestPayload());
@@ -342,6 +483,9 @@ function route(req, res) {
     const deb = latest.downloads && latest.downloads.linux;
     if (!deb || !deb.url) return sendJson(res, 404, { ok: false, error: 'linux download not configured' });
     return redirect(res, deb.url);
+  }
+  if (pathname === '/api/telemetry' || pathname === '/api/forget') {
+    return handleTelemetry(req, res, pathname);
   }
   if (pathname === '/api/extensions') {
     if (req.method === 'POST') return handleStoreUpload(req, res);
