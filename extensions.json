@@ -1,0 +1,23 @@
+{
+  "note": "Static fallback extension store, committed to the site repo so the browser's store keeps working even when the live site host is down. The app tries the live /api/extensions first, then falls back to this file. All packages are official releases from their projects.",
+  "extensions": [
+    {
+      "id": "ublock-origin-lite",
+      "name": "uBlock Origin Lite",
+      "version": "2026.9.920",
+      "author": "Raymond Hill / uBlockOrigin",
+      "description": "uBO Lite is an MV3 (modern) content blocker: blocks ads, trackers, coin miners and popups while using almost no memory — the successor to uBlock Origin for Chromium.",
+      "url": "https://github.com/uBlockOrigin/uBOL-home/releases/download/2026.920.1710/uBOLite_2026.920.1710.chromium.zip",
+      "size": 9707041
+    },
+    {
+      "id": "dark-reader",
+      "name": "Dark Reader",
+      "version": "4.9.132",
+      "author": "Dark Reader Ltd",
+      "description": "Eye-care browsing: turns every site into dark mode by analyzing and inverting page colors on the fly. Adjust brightness, contrast and sepia, and schedule per-site themes.",
+      "url": "https://github.com/darkreader/darkreader/releases/download/v4.9.132/darkreader-chrome-mv3.zip",
+      "size": 842484
+    }
+  ]
+}
