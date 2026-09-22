@@ -12,10 +12,10 @@ The Windows installer (~117 MB), the Linux `.deb` (~142 MB) and the macOS `.dmg`
 are too big for GitHub's 100 MB per-file repo limit, so they are published as
 **GitHub Release assets** and linked directly:
 
-- Windows: `.../releases/download/v1.0.4/FusionHubBrowser-Setup-1.0.4.exe`
-- Linux: `.../releases/download/v1.0.4/FusionHub-Browser-1.0.4-linux.deb`
-- macOS: `.../releases/download/v1.0.4/FusionHub-Browser-1.0.4-mac.dmg`
-  (universal: Apple Silicon + Intel)
+- Windows: `.../releases/download/v1.0.5/FusionHubBrowser-Setup-1.0.5.exe`
+- Linux: `.../releases/download/v1.0.5/FusionHub-Browser-1.0.5-linux.deb`
+- macOS: published on older tags only while the macOS build is disabled
+  (see the "Not working at this time" tile on the site)
 
 Copies staged in `download/` are git-ignored (`.exe` / `.deb` / `.dmg`) and must
 never be committed.
