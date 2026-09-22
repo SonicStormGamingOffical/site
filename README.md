@@ -12,8 +12,8 @@ The Windows installer (~117 MB) and the Linux `.deb` (~142 MB) are too big for
 GitHub's 100 MB per-file repo limit, so they are published as **GitHub Release
 assets** and linked directly:
 
-- Windows: `.../releases/download/v1.0.3/FusionHubBrowser-Setup-1.0.3.exe`
-- Linux: `.../releases/download/v1.0.3/FusionHub-Browser-1.0.3-linux.deb`
+- Windows: `.../releases/download/v1.0.4/FusionHubBrowser-Setup-1.0.4.exe`
+- Linux: `.../releases/download/v1.0.4/FusionHub-Browser-1.0.4-linux.deb`
 
 Copies staged in `download/` are git-ignored (`.exe` / `.deb`) and must never be
 committed.
@@ -53,6 +53,13 @@ written to `data/extensions/` (git-ignored) with an `index.json` catalogue, and
 they are served back at `/api/extensions/<id>/download`. Inside the browser,
 **Extensions → Extension store** lists the catalogue and installs a package with
 one click.
+
+**Static fallback catalogue:** `extensions.json` (committed in this repo) is the
+browser's offline fallback. When the live site is unreachable the in-app store
+reads `extensions.json` from `raw.githubusercontent.com` instead, so the store
+keeps working even while the site host is down. Each entry needs `id`, `name`,
+`version`, `description`, `size` and a direct `url` to the package (GitHub
+release assets work great).
 
 Set `STORE_UPLOAD_TOKEN` to require a shared secret before publishing (send it as
 an `x-upload-token` header or a `?token=` query parameter); leave it empty to let
