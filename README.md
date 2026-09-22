@@ -8,15 +8,17 @@ Canonical URL: **https://site-production-e64f.up.railway.app/**
 
 ## Downloads come from GitHub Releases
 
-The Windows installer (~117 MB) and the Linux `.deb` (~142 MB) are too big for
-GitHub's 100 MB per-file repo limit, so they are published as **GitHub Release
-assets** and linked directly:
+The Windows installer (~117 MB), the Linux `.deb` (~142 MB) and the macOS `.dmg`
+are too big for GitHub's 100 MB per-file repo limit, so they are published as
+**GitHub Release assets** and linked directly:
 
 - Windows: `.../releases/download/v1.0.4/FusionHubBrowser-Setup-1.0.4.exe`
 - Linux: `.../releases/download/v1.0.4/FusionHub-Browser-1.0.4-linux.deb`
+- macOS: `.../releases/download/v1.0.4/FusionHub-Browser-1.0.4-mac.dmg`
+  (universal: Apple Silicon + Intel)
 
-Copies staged in `download/` are git-ignored (`.exe` / `.deb`) and must never be
-committed.
+Copies staged in `download/` are git-ignored (`.exe` / `.deb` / `.dmg`) and must
+never be committed.
 
 ## `server.js`
 
@@ -31,6 +33,7 @@ and gives apps a single URL to talk to. Railway runs it via
 | `GET /version.json`  | the version file, for convenience (same as `/api/latest`)|
 | `GET /download/windows` | 302 redirect to the Windows `.exe` release asset      |
 | `GET /download/linux`   | 302 redirect to the Linux `.deb` release asset        |
+| `GET /download/mac`     | 302 redirect to the macOS `.dmg` release asset        |
 | `GET /releases`      | 302 redirect to the GitHub releases page                 |
 | `GET /store.html`    | extension store: browse + publish extensions             |
 | `GET /api/extensions` | extension catalogue (JSON; used by the in-app store)    |

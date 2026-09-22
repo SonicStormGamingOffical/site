@@ -8,6 +8,7 @@
  *   GET  /version.json        same version file, served for convenience
  *   GET  /download/windows    redirects to the Windows .exe release asset
  *   GET  /download/linux      redirects to the Linux .deb release asset
+ *   GET  /download/mac        redirects to the macOS .dmg release asset
  *   GET  /releases            redirects to the GitHub releases page
  *   GET  /health              liveness probe
  *
@@ -64,7 +65,8 @@ const TYPES = {
   '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8',
   '.exe': 'application/octet-stream',
-  '.deb': 'application/vnd.debian.binary-package'
+  '.deb': 'application/vnd.debian.binary-package',
+  '.dmg': 'application/x-apple-diskimage'
 };
 
 // ---------------------------------------------------------------------------
@@ -123,9 +125,11 @@ async function refreshFromGitHub() {
 
   const win = pick(/\.exe$/i);
   const deb = pick(/\.deb$/i);
+  const dmg = pick(/\.dmg$/i);
   const downloads = Object.assign({}, latest.downloads || {});
   if (win) downloads.windows = { url: win.browser_download_url, size: Number(win.size) || 0, name: win.name };
   if (deb) downloads.linux = { url: deb.browser_download_url, size: Number(deb.size) || 0, name: deb.name };
+  if (dmg) downloads.mac = { url: dmg.browser_download_url, size: Number(dmg.size) || 0, name: dmg.name };
 
   latest = {
     version: tag,
@@ -483,6 +487,11 @@ function route(req, res) {
     const deb = latest.downloads && latest.downloads.linux;
     if (!deb || !deb.url) return sendJson(res, 404, { ok: false, error: 'linux download not configured' });
     return redirect(res, deb.url);
+  }
+  if (pathname === '/download/mac') {
+    const mac = latest.downloads && latest.downloads.mac;
+    if (!mac || !mac.url) return sendJson(res, 404, { ok: false, error: 'mac download not configured' });
+    return redirect(res, mac.url);
   }
   if (pathname === '/api/telemetry' || pathname === '/api/forget') {
     return handleTelemetry(req, res, pathname);
