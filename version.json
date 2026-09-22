@@ -5,12 +5,12 @@
     "windows": {
       "name": "FusionHubBrowser-Setup-1.0.4.exe",
       "url": "https://github.com/SonicStormGamingOffical/site/releases/latest/download/FusionHubBrowser-Setup-1.0.4.exe",
-      "size": 122195391
+      "size": 122195544
     },
     "linux": {
       "name": "FusionHub-Browser-1.0.4-linux.deb",
       "url": "https://github.com/SonicStormGamingOffical/site/releases/latest/download/FusionHub-Browser-1.0.4-linux.deb",
-      "size": 148755556
+      "size": 148755816
     },
     "mac": {
       "name": "FusionHub-Browser-1.0.4-mac.dmg",
@@ -19,8 +19,8 @@
     }
   },
   "sha256": {
-    "windows": "b2d4f450bc8317818e67e2937391dd997980ee189b5e2cbbfeedbb6fedb69ea6",
-    "linux": "2bcb46a4c79c25e02024c0c04188b34dec111e98ac99aa9156d07cf8ea634f9e",
+    "windows": "8e4996e539ed8bab66c4c23ca8609e95330f8d11cfee4501c7482cfce54f3472",
+    "linux": "ea25012e6e6228599a8d025a170a918589e93ed442930b462c68802f67df4006",
     "mac": "fff4454724a985f84968fe969edcc68a567dd091fc519d1ef7e666e86fe50f6d"
   }
 }
