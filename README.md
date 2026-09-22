@@ -1,4 +1,4 @@
-# FusionHub Browser - Website
+﻿# FusionHub Browser - Website
 
 This folder is the static website **and** the small Node service that powers it.
 It is hosted on **Railway**, which pulls this repo from GitHub
@@ -12,8 +12,8 @@ The Windows installer (~117 MB), the Linux `.deb` (~142 MB) and the macOS `.dmg`
 are too big for GitHub's 100 MB per-file repo limit, so they are published as
 **GitHub Release assets** and linked directly:
 
-- Windows: `.../releases/download/v1.0.5/FusionHubBrowser-Setup-1.0.5.exe`
-- Linux: `.../releases/download/v1.0.5/FusionHub-Browser-1.0.5-linux.deb`
+- Windows: `.../releases/download/v1.0.6/FusionHubBrowser-Setup-1.0.6.exe`
+- Linux: `.../releases/download/v1.0.6/FusionHub-Browser-1.0.6-linux.deb`
 - macOS: published on older tags only while the macOS build is disabled
   (see the "Not working at this time" tile on the site)
 
@@ -24,7 +24,7 @@ never be committed.
 
 `site/server.js` is a dependency-free Node server that serves the static site
 and gives apps a single URL to talk to. Railway runs it via
-`package.json` → `npm start`.
+`package.json` â†’ `npm start`.
 
 | Endpoint             | Purpose                                                  |
 | -------------------- | -------------------------------------------------------- |
@@ -54,7 +54,7 @@ The store is user-driven: anyone can publish a `.crx` file or a `.zip` of an
 unpacked extension (it must contain `manifest.json` at its root). Packages are
 written to `data/extensions/` (git-ignored) with an `index.json` catalogue, and
 they are served back at `/api/extensions/<id>/download`. Inside the browser,
-**Extensions → Extension store** lists the catalogue and installs a package with
+**Extensions â†’ Extension store** lists the catalogue and installs a package with
 one click.
 
 **Static fallback catalogue:** `extensions.json` (committed in this repo) is the

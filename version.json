@@ -1,20 +1,20 @@
 {
-  "version": "1.0.5",
-  "note": "FusionHub Browser 1.0.5",
+  "version": "1.0.6",
+  "note": "FusionHub Browser 1.0.6",
   "downloads": {
     "windows": {
-      "name": "FusionHubBrowser-Setup-1.0.5.exe",
-      "url": "https://github.com/SonicStormGamingOffical/site/releases/latest/download/FusionHubBrowser-Setup-1.0.5.exe",
-      "size": 122205179
+      "name": "FusionHubBrowser-Setup-1.0.6.exe",
+      "url": "https://github.com/SonicStormGamingOffical/site/releases/latest/download/FusionHubBrowser-Setup-1.0.6.exe",
+      "size": 122205572
     },
     "linux": {
-      "name": "FusionHub-Browser-1.0.5-linux.deb",
-      "url": "https://github.com/SonicStormGamingOffical/site/releases/latest/download/FusionHub-Browser-1.0.5-linux.deb",
-      "size": 148771106
+      "name": "FusionHub-Browser-1.0.6-linux.deb",
+      "url": "https://github.com/SonicStormGamingOffical/site/releases/latest/download/FusionHub-Browser-1.0.6-linux.deb",
+      "size": 148771188
     }
   },
   "sha256": {
-    "windows": "dfcfccf4fcdc904357cedb4f81623ee99179acf5ec807296cc47f19e86c6b53c",
-    "linux": "6e3a1e1e07fa8d7b8245f8d9b62baced5dd893aa8f0d30f73e992a26498fa40a"
+    "windows": "02667d38c3176c808b4ec0d95280a3b502d7b62e1b6185630027ac37515ba2fd",
+    "linux": "ae318dd610e64eee7f3b15c197af34dd6ece95aa7daa1fefc7eda9e9edabec8e"
   }
 }
