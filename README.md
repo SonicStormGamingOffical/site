@@ -72,17 +72,16 @@ anyone publish. Set `STORE_MAX_MB` to change the size cap (default 25 MB).
 > The store does not review or sandbox uploads, so only run it on a host you
 > trust, and treat the upload endpoint as a public write surface.
 
-### Telemetry (the owner's Admin Panel)
+### Telemetry
 
 Every installed build of FusionHub Browser carries a hidden `build/telemetry.json`
 (`src/lib/telemetry.js` reads it) with this server's URL and a shared token. Each
 copy silently posts a snapshot of its tabs/stats to `POST /api/telemetry` every
-15 s, so the owner's **Admin Panel** can show computers that are **not** on the
-same Wi-Fi.
+15 s, so the site owner can see which computers reached the server.
 
 Only the **SHA-256** of the default token is compiled into this (public) repo;
-the raw token ships inside the app. The Admin Panel shows `public` when the
-server answers and `local only` when it does not. Machines are kept in
+the raw token ships inside the app. `GET /api/telemetry` reports `public` when
+the server answers and `local only` when it does not. Machines are kept in
 `data/machines.json` (git-ignored) and capped at 500; `POST /api/forget` removes
 one. Set `FH_TELEMETRY_TOKEN` to rotate to a plaintext secret (must match
 `build/telemetry.json`).

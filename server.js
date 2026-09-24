@@ -276,7 +276,7 @@ async function handleStoreUpload(req, res) {
 }
 
 // ---------------------------------------------------------------------------
-// Telemetry collection (the owner's Admin Panel)
+// Telemetry collection
 //
 //   POST /api/telemetry   store/replace one machine's telemetry   (auth)
 //   GET  /api/telemetry   list every machine the server has seen   (auth)
